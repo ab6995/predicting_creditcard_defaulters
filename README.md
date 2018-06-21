@@ -21,3 +21,7 @@ Banks and credit card clients often have a high risk in that they don't know if 
 * PAY_AMT1 to PAY_AMT6: The actual amount the customer paid for each of the last 6 months
 * DEFAULTED: Whether the customer defaulted or not on the 7th month. The values are 0 (did not default) and 1 (defaulted)
 
+#### Questions to be answered:
+1. **Loading and processing the data** : Do Data cleansing and making it to be enhanced to answer the required questions.
+2. **Do the Analysis** : Perform the basic analysis in spark
+3. **Use of spark machine learning lib** : build models using pyspark.ml
