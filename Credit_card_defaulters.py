@@ -188,3 +188,40 @@ td.collect()
 (trainingData, testData) = td.randomSplit([0.7, 0.3])
 trainingData.count()
 testData.count()
+
+from pyspark.ml.classification import RandomForestClassifier
+from pyspark.ml.classification import DecisionTreeClassifier
+from pyspark.ml.classification import NaiveBayes, NaiveBayesModel
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+
+evaluator = MulticlassClassificationEvaluator(predictionCol="prediction", \
+                    labelCol="indexed",metricName="accuracy")
+
+#Create the Decision Trees model
+dtClassifer = DecisionTreeClassifier(labelCol="indexed", \
+                featuresCol="features")
+dtModel = dtClassifer.fit(trainingData)
+#Predict on the test data
+predictions = dtModel.transform(testData)
+predictions.select("prediction","indexed","label","features").collect()
+print("Results of Decision Trees : ",evaluator.evaluate(predictions))      
+
+#Create the Random Forest model
+rmClassifer = RandomForestClassifier(labelCol="indexed", \
+                featuresCol="features")
+rmModel = rmClassifer.fit(trainingData)
+#Predict on the test data
+predictions = rmModel.transform(testData)
+predictions.select("prediction","indexed","label","features").collect()
+print("Results of Random Forest : ",evaluator.evaluate(predictions)  )
+
+#Create the Naive Bayes model
+nbClassifer = NaiveBayes(labelCol="indexed", \
+                featuresCol="features")
+nbModel = nbClassifer.fit(trainingData)
+#Predict on the test data
+predictions = nbModel.transform(testData)
+predictions.select("prediction","indexed","label","features").collect()
+print("Results of Naive Bayes : ",evaluator.evaluate(predictions)  )
+
+
