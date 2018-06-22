@@ -8,11 +8,12 @@ dataLines.count()
 dataLines.take(1000)
 
 
+#Cleanup data. Remove lines that are not "CSV"
+filteredLines = dataLines.filter(lambda x : x.find("aaaaaa") < 0 )
+filteredLines.count()
+
 #Remove double quotes that are present in few records.
 cleanedLines = filteredLines.map(lambda x: x.replace("\"", ""))
 cleanedLines.count()
 cleanedLines.cache()
 
-#Cleanup data. Remove lines that are not "CSV"
-filteredLines = dataLines.filter(lambda x : x.find("aaaaaa") < 0 )
-filteredLines.count()
