@@ -224,4 +224,43 @@ predictions = nbModel.transform(testData)
 predictions.select("prediction","indexed","label","features").collect()
 print("Results of Naive Bayes : ",evaluator.evaluate(predictions)  )
 
+#Filter only columns needed for clustering
+ccClustDf = ccFinalDf.select("SEX","EDUCATION","MARRIAGE","AGE","CUSTID")
+
+#Do centering and scaling for the values
+summStats=ccClustDf.describe().toPandas()
+meanValues=summStats.iloc[1,1:5].values.tolist()
+stdValues=summStats.iloc[2,1:5].values.tolist()
+bcMeans=SpContext.broadcast(meanValues)
+bcStdDev=SpContext.broadcast(stdValues)
+
+def centerAndScale(inRow) :
+    global bcMeans
+    global bcStdDev
+    
+    meanArray=bcMeans.value
+    stdArray=bcStdDev.value
+
+    retArray=[]
+    for i in range(len(meanArray)):
+        retArray.append( (float(inRow[i]) - float(meanArray[i])) /\
+            float(stdArray[i]) )
+    return Row(CUSTID=inRow[4], features=Vectors.dense(retArray))
+    
+ccMap = ccClustDf.rdd.repartition(2).map(centerAndScale)
+ccMap.collect()
+
+#Create a Spark Data Frame with the features
+ccFClustDf = SpSession.createDataFrame(ccMap)
+ccFClustDf.cache()
+
+ccFClustDf.select("features").show(10)
+
+#clustering
+from pyspark.ml.clustering import KMeans
+kmeans = KMeans(k=4, seed=1)
+model = kmeans.fit(ccFClustDf)
+predictions = model.transform(ccFClustDf)
+predictions.select("*").show()
+
 
