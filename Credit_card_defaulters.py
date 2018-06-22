@@ -119,3 +119,31 @@ marrDf.collect()
 ccFinalDf = ccDf2.join( marrDf, ccDf2.MARRIAGE== marrDf.MARRIAGE ).drop(marrDf.MARRIAGE)
 ccFinalDf.cache()
 ccFinalDf.take(5)
+
+#Do analysis as required by the problem statement
+#Create a temp view
+ccFinalDf.createOrReplaceTempView("CCDATA")
+
+
+SpSession.sql("SELECT SEX_NAME, count(*) as Total, " + \
+                " SUM(DEFAULTED) as Defaults, " + \
+                " ROUND(SUM(DEFAULTED) * 100 / count(*)) as PER_DEFAULT " + \
+                "FROM CCDATA GROUP BY SEX_NAME"  ).show()
+
+              
+SpSession.sql("SELECT MARR_DESC, ED_STR, count(*) as Total," + \
+                " SUM(DEFAULTED) as Defaults, " + \
+                " ROUND(SUM(DEFAULTED) * 100 / count(*)) as PER_DEFAULT " + \
+                "FROM CCDATA GROUP BY MARR_DESC,ED_STR " + \
+                "ORDER BY 1,2").show()
+             
+SpSession.sql("SELECT AVG_PAY_DUR, count(*) as Total, " + \
+                " SUM(DEFAULTED) as Defaults, " + \
+                " ROUND(SUM(DEFAULTED) * 100 / count(*)) as PER_DEFAULT " + \
+                "FROM CCDATA GROUP BY AVG_PAY_DUR ORDER BY 1"  ).show()
+
+#Perform first round Correlation analysis
+for i in ccDf.columns:
+    if not( isinstance(ccDf.select(i).take(1)[0][0], str)) :
+        print( "Correlation to DEFAULTED for ", i,\
+            ccDf.stat.corr('DEFAULTED',i))
