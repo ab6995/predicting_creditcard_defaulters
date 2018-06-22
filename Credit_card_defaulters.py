@@ -147,3 +147,44 @@ for i in ccDf.columns:
     if not( isinstance(ccDf.select(i).take(1)[0][0], str)) :
         print( "Correlation to DEFAULTED for ", i,\
             ccDf.stat.corr('DEFAULTED',i))
+
+
+#Transform to a Data Frame for input to Machine Learing
+
+
+import math
+from pyspark.ml.linalg import Vectors
+
+def transformToLabeledPoint(row) :
+    lp = ( row["DEFAULTED"], \
+            Vectors.dense([
+                row["AGE"], \
+                row["AVG_BILL_AMT"], \
+                row["AVG_PAY_AMT"], \
+                row["AVG_PAY_DUR"], \
+                row["EDUCATION"], \
+                row["LIMIT_BAL"], \
+                row["MARRIAGE"], \
+                row["PER_PAID"], \
+                row["SEX"]
+        ]))
+    return lp
+    
+ccLp = ccFinalDf.rdd.repartition(2).map(transformToLabeledPoint)
+ccLp.collect()
+ccNormDf = SpSession.createDataFrame(ccLp,["label", "features"])
+ccNormDf.select("label","features").show(10)
+ccNormDf.cache()
+
+
+#Indexing needed as pre-req for Decision Trees
+from pyspark.ml.feature import StringIndexer
+stringIndexer = StringIndexer(inputCol="label", outputCol="indexed")
+si_model = stringIndexer.fit(ccNormDf)
+td = si_model.transform(ccNormDf)
+td.collect()
+
+#Split into training and testing data
+(trainingData, testData) = td.randomSplit([0.7, 0.3])
+trainingData.count()
+testData.count()
